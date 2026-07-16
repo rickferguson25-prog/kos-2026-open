@@ -1,23 +1,15 @@
-ADMIN_PIN=change-this-pin
-LIVE_GOLF_PROVIDER=demo
-CACHE_SECONDS=60
-REFRESH_SECONDS=60
-
-# Use this app with RapidAPI Golf Leaderboard Data once you locate
-# The Open Championship / Royal Birkdale fixture ID.
-#
-# LIVE_GOLF_PROVIDER=rapidapi
-# RAPIDAPI_KEY=your_rapidapi_key
-# RAPIDAPI_HOST=golf-leaderboard-data.p.rapidapi.com
-# RAPIDAPI_URL=https://golf-leaderboard-data.p.rapidapi.com/<live-leaderboard-endpoint>?id=<OPEN_CHAMPIONSHIP_FIXTURE_ID>
-
-# Required if Netlify Blobs does not auto-detect site context:
-NETLIFY_BLOBS_SITE_ID=
-NETLIFY_BLOBS_TOKEN=
-
-# Later feed options:
-# LIVE_GOLF_PROVIDER=custom
-# CUSTOM_FEED_URL=
-# LIVE_GOLF_PROVIDER=sportsdataio
-# SPORTSDATAIO_KEY=
-# SPORTSDATAIO_URL=
+{
+  "name": "open-championship-pool-royal-birkdale",
+  "version": "1.0.4",
+  "private": true,
+  "scripts": {
+    "build": "echo Static site - no build step",
+    "dev": "netlify dev"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^8.2.0"
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.38.1"
+  }
+}
