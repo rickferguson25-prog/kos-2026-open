@@ -1,0 +1,109 @@
+const { getStore } = require("@netlify/blobs");
+
+const defaultPool = {
+  eventName: "Kings of Swing The Open Championship Golf Pool",
+  feePerGroup: 20,
+  golfersPerGroup: 4,
+  missedCutPenalty: 10,
+  withdrawnPenalty: 15,
+  groups: [],
+  updatedAt: null
+};
+
+function send(statusCode, body) {
+  return {
+    statusCode,
+    headers: {
+      "content-type": "application/json; charset=utf-8",
+      "cache-control": "no-store, max-age=0"
+    },
+    body: JSON.stringify(body)
+  };
+}
+
+function makeStore() {
+  const siteID = process.env.NETLIFY_BLOBS_SITE_ID;
+  const token = process.env.NETLIFY_BLOBS_TOKEN;
+
+  if (siteID && token) {
+    return getStore({
+      name: "open-championship-golf-pool",
+      siteID,
+      token
+    });
+  }
+
+  return getStore("open-championship-golf-pool");
+}
+
+function authorized(event) {
+  const requiredPin = process.env.ADMIN_PIN || "";
+  if (!requiredPin) return true;
+
+  const supplied =
+    event.headers["x-admin-pin"] ||
+    event.headers["X-Admin-Pin"] ||
+    "";
+
+  return supplied === requiredPin;
+}
+
+function cleanGroups(groups) {
+  if (!Array.isArray(groups)) return [];
+
+  return groups.map((g, i) => ({
+    id: g.id || `group-${Date.now()}-${i}`,
+    entrant: String(g.entrant || "").trim(),
+    label: String(g.label || "").trim(),
+    golfers: Array.isArray(g.golfers)
+      ? g.golfers.map(x => String(x || "").trim()).filter(Boolean).slice(0, 4)
+      : []
+  })).filter(g => g.entrant && g.golfers.length === 4);
+}
+
+exports.handler = async function(event) {
+  try {
+    const store = makeStore();
+    const current = await store.get("pool", { type: "json" }) || defaultPool;
+
+    if (event.httpMethod === "GET") {
+      return send(200, current);
+    }
+
+    if (event.httpMethod === "POST") {
+      if (!authorized(event)) {
+        return send(401, {
+          error: "Invalid admin PIN. It must match ADMIN_PIN in Netlify environment variables."
+        });
+      }
+
+      let body;
+      try {
+        body = JSON.parse(event.body || "{}");
+      } catch {
+        return send(400, { error: "Invalid JSON body." });
+      }
+
+      const pool = {
+        ...defaultPool,
+        feePerGroup: Number(body.feePerGroup || 20),
+        golfersPerGroup: 4,
+        missedCutPenalty: Number(body.missedCutPenalty || 10),
+        withdrawnPenalty: Number(body.withdrawnPenalty || 15),
+        groups: cleanGroups(body.groups),
+        updatedAt: new Date().toISOString()
+      };
+
+      await store.setJSON("pool", pool);
+      return send(200, pool);
+    }
+
+    return send(405, { error: "Method not allowed." });
+  } catch (err) {
+    return send(500, {
+      error: "Pool function failed.",
+      detail: err.message,
+      hint: "If this mentions Netlify Blobs environment, set NETLIFY_BLOBS_SITE_ID and NETLIFY_BLOBS_TOKEN in Netlify environment variables."
+    });
+  }
+};
