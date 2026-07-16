@@ -4,7 +4,7 @@ Complete Netlify app for a 4-player-group golf pool for **The Open Championship*
 
 ## Version
 
-v2
+v3
 
 ## What this app does
 
@@ -99,7 +99,7 @@ Deploys → Trigger deploy → Clear cache and deploy site
 Then open:
 
 ```text
-https://your-site-name.netlify.app/?v=2
+https://your-site-name.netlify.app/?v=3
 ```
 
 ## Test endpoints
@@ -107,14 +107,21 @@ https://your-site-name.netlify.app/?v=2
 ```text
 /api/pool
 /api/live-leaderboard
-/app.js?v=2
+/app.js?v=3
 ```
 
 
-## v2 branding update
+## v3 branding update
 
 - Restores the same footer branding used in the prior KOS/TRG app:
   - KOS logo
   - Kings of Swing Golf Group
   - Powered by TRG
 - Keeps The Open Championship / Royal Birkdale event identity in the header and footer detail line.
+
+
+## v3 deploy fix
+
+- Replaced `netlify.toml` with a clean valid TOML file.
+- Keeps KOS logo, Kings of Swing Golf Group, and Powered by TRG footer branding.
+- Use `?v=3` after deploy.
