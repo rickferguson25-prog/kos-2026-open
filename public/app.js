@@ -1,5 +1,5 @@
 (() => {
-  const VERSION = "v4";
+  const VERSION = "v5";
   console.log("The Open Championship Golf Pool app.js " + VERSION + " loaded");
 
   let pool = {
@@ -28,13 +28,24 @@
     return String(v || "").trim().toLowerCase().replace(/[^a-z0-9]/g, "");
   }
 
+  function displayName(v) {
+    const raw = norm(v);
+    // DataGolf commonly returns names as "Last, First". Convert for matching/display.
+    if (raw.includes(",")) {
+      const [last, rest] = raw.split(",");
+      const first = norm(rest);
+      if (first && norm(last)) return `${first} ${norm(last)}`;
+    }
+    return raw;
+  }
+
   function key(v) {
-    return norm(v)
+    return displayName(v)
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
       .toLowerCase()
       .replace(/&/g, "and")
-      .replace(/[.'’,-]/g, "")
+      .replace(/[.'’-]/g, "")
       .replace(/\b(jr|sr|ii|iii|iv)\b/g, "")
       .replace(/\s+/g, " ")
       .trim();

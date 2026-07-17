@@ -32,6 +32,17 @@ function firstValue(obj, paths) {
   return "";
 }
 
+function formatPlayerName(name) {
+  const raw = String(name || "").trim().replace(/\s+/g, " ");
+  // DataGolf returns player_name as "Last, First". Convert to "First Last" so pool CSV names match.
+  if (raw.includes(",")) {
+    const [last, ...restParts] = raw.split(",");
+    const first = restParts.join(",").trim();
+    if (first && last.trim()) return `${first} ${last.trim()}`.replace(/\s+/g, " ").trim();
+  }
+  return raw;
+}
+
 function fullNameFrom(obj) {
   if (!obj || typeof obj !== "object") return "";
   const direct = firstValue(obj, [
@@ -39,7 +50,7 @@ function fullNameFrom(obj) {
     "display_name", "displayName", "DisplayName", "participant_name", "participantName", "competitor_name", "competitorName",
     "golfer", "Golfer", "golfer_name", "golferName"
   ]);
-  if (direct) return String(direct).trim();
+  if (direct) return formatPlayerName(direct);
   for (const k of ["player", "Player", "participant", "Participant", "competitor", "Competitor", "athlete", "Athlete", "contestant", "Contestant", "person", "Person", "entry", "Entry"]) {
     if (obj[k] && typeof obj[k] === "object") {
       const nested = fullNameFrom(obj[k]);
@@ -48,7 +59,7 @@ function fullNameFrom(obj) {
   }
   const first = firstValue(obj, ["first_name", "FirstName", "firstName", "given_name", "givenName", "player.first_name", "player.FirstName", "player.firstName", "Player.FirstName", "participant.firstName", "competitor.firstName"]);
   const last = firstValue(obj, ["last_name", "LastName", "lastName", "family_name", "familyName", "player.last_name", "player.LastName", "player.lastName", "Player.LastName", "participant.lastName", "competitor.lastName"]);
-  return [first, last].filter(Boolean).join(" ").trim();
+  return formatPlayerName([first, last].filter(Boolean).join(" ").trim());
 }
 
 function status(p) {
@@ -172,7 +183,7 @@ exports.handler = async function() {
       if (!process.env.CUSTOM_FEED_URL) throw new Error("CUSTOM_FEED_URL is required.");
       const raw = await fetchJson(process.env.CUSTOM_FEED_URL);
       const players = normalize(raw);
-      data = { provider, eventName: raw.eventName || raw.EventName || "Custom Golf Feed", updatedAt: raw.updatedAt || new Date().toISOString(), players, debug: { playerCount: players.length } };
+      data = { provider, eventName: raw.eventName || raw.EventName || raw.event_name || raw.tournament_name || "Custom Golf Feed", updatedAt: raw.updatedAt || raw.updated || raw.last_updated || raw.timestamp || new Date().toISOString(), players, debug: { playerCount: players.length } };
     } else if (provider === "rapidapi") {
       if (!process.env.RAPIDAPI_URL || !process.env.RAPIDAPI_KEY) throw new Error("RAPIDAPI_URL and RAPIDAPI_KEY are required.");
       const headers = { "x-rapidapi-key": process.env.RAPIDAPI_KEY };

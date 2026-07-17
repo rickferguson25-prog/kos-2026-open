@@ -1,0 +1,1 @@
+v5 fixes DataGolf Last, First player_name values by converting them to First Last for matching pool CSV names. Example: Suber, Jackson -> Jackson Suber.

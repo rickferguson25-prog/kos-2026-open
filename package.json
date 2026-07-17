@@ -1,6 +1,6 @@
 {
   "name": "open-championship-pool-royal-birkdale",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "private": true,
   "scripts": {
     "build": "echo Static site - no build step",
