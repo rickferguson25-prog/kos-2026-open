@@ -6,6 +6,8 @@ const defaultPool = {
   golfersPerGroup: 4,
   missedCutPenalty: 10,
   withdrawnPenalty: 15,
+  cutOfficial: false,
+  cutLine: 0,
   groups: [],
   updatedAt: null
 };
@@ -90,6 +92,8 @@ exports.handler = async function(event) {
         golfersPerGroup: 4,
         missedCutPenalty: Number(body.missedCutPenalty || 10),
         withdrawnPenalty: Number(body.withdrawnPenalty || 15),
+        cutOfficial: Boolean(body.cutOfficial),
+        cutLine: Number(body.cutLine || 0),
         groups: cleanGroups(body.groups),
         updatedAt: new Date().toISOString()
       };

@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Kings of Swing Golf Pool</title>
-  <link rel="stylesheet" href="/styles.css?v=4"/>
+  <link rel="stylesheet" href="/styles.css?v=6"/>
 </head>
 <body>
 <header class="hero">
@@ -31,7 +31,7 @@
 
   <section class="card debug-card">
     <button id="forceReload">Force Reload Pool + Scores</button>
-    <p id="debugLine">App version v4 loading…</p>
+    <p id="debugLine">App version v6 loading…</p>
   </section>
 
   <section class="card">
@@ -108,7 +108,15 @@
         <label>Withdrawn Penalty
           <input id="withdrawnPenalty" class="admin-only" type="number" value="15" disabled />
         </label>
+        <label>Cut Line
+          <input id="cutLine" class="admin-only" type="number" value="0" step="1" disabled />
+        </label>
       </div>
+
+      <label class="check-row">
+        <input id="cutOfficial" class="admin-only" type="checkbox" disabled />
+        <span>Cut is official — mark players worse than the cut line as Missed Cut</span>
+      </label>
 
       <div class="button-row">
         <button class="primary admin-only" id="addGroup" disabled>Add Group</button>
@@ -145,7 +153,7 @@
 </main>
 
 <footer>
-  <img src="/assets/KOS_Logo.jpeg?v=4" alt="Kings of Swing logo" class="footer-logo"/>
+  <img src="/assets/KOS_Logo.jpeg?v=6" alt="Kings of Swing logo" class="footer-logo"/>
   <div>
     <strong>Kings of Swing Golf Group</strong>
     <span>Powered by TRG</span>
@@ -153,6 +161,6 @@
   </div>
 </footer>
 
-<script src="/app.js?v=4" defer></script>
+<script src="/app.js?v=6" defer></script>
 </body>
 </html>

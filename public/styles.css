@@ -201,3 +201,15 @@ footer small{
   color:var(--muted);
   font-size:.78rem;
 }
+
+.check-row {
+  display: flex;
+  gap: .6rem;
+  align-items: flex-start;
+  margin: .75rem 0 1rem;
+  font-weight: 600;
+}
+.check-row input {
+  width: auto;
+  margin-top: .2rem;
+}

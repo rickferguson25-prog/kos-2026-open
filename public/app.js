@@ -1,5 +1,5 @@
 (() => {
-  const VERSION = "v5";
+  const VERSION = "v6";
   console.log("The Open Championship Golf Pool app.js " + VERSION + " loaded");
 
   let pool = {
@@ -7,6 +7,8 @@
     golfersPerGroup: 4,
     missedCutPenalty: 10,
     withdrawnPenalty: 15,
+    cutOfficial: false,
+    cutLine: 0,
     groups: []
   };
 
@@ -207,6 +209,8 @@
       if ($("feePerGroup")) $("feePerGroup").value = pool.feePerGroup ?? 20;
       if ($("missedCutPenalty")) $("missedCutPenalty").value = pool.missedCutPenalty ?? 10;
       if ($("withdrawnPenalty")) $("withdrawnPenalty").value = pool.withdrawnPenalty ?? 15;
+      if ($("cutOfficial")) $("cutOfficial").checked = Boolean(pool.cutOfficial);
+      if ($("cutLine")) $("cutLine").value = pool.cutLine ?? 0;
 
       setDebug(`Pool loaded: ${(pool.groups || []).length} group(s), updated ${pool.updatedAt ? new Date(pool.updatedAt).toLocaleString() : "not yet saved"}`);
     } catch (e) {
@@ -231,6 +235,28 @@
     }
   }
 
+  function isCutOfficial() {
+    return Boolean(pool.cutOfficial || $("cutOfficial")?.checked);
+  }
+
+  function currentCutLine() {
+    const raw = $("cutLine") ? $("cutLine").value : pool.cutLine;
+    const v = Number(raw || 0);
+    return Number.isFinite(v) ? v : 0;
+  }
+
+  function inferredStatus(p) {
+    const rawStatus = norm(p?.status || "Active");
+    if (["Withdrawn", "Missed Cut", "Not Found"].includes(rawStatus)) return rawStatus;
+
+    if (isCutOfficial()) {
+      const total = Number(p?.total || 0);
+      if (Number.isFinite(total) && total > currentCutLine()) return "Missed Cut";
+    }
+
+    return rawStatus || "Active";
+  }
+
   function effectiveGolfer(name) {
     const p = (typeof findLivePlayer === "function")
       ? findLivePlayer(name)
@@ -240,10 +266,11 @@
       return { name, total: 0, status: "Not Found", thru: "—" };
     }
 
+    const status = inferredStatus(p);
     let total = Number(p.total || 0);
-    if (p.status === "Missed Cut") total += Number(pool.missedCutPenalty || 10);
-    if (p.status === "Withdrawn") total += Number(pool.withdrawnPenalty || 15);
-    return { ...p, total };
+    if (status === "Missed Cut") total += Number(pool.missedCutPenalty || 10);
+    if (status === "Withdrawn") total += Number(pool.withdrawnPenalty || 15);
+    return { ...p, status, total };
   }
 
   function displayGroupLabel(group) {
@@ -308,15 +335,18 @@
     const body = $("golferBody");
     if (!body) return;
 
-    body.innerHTML = (live.players || []).map(p => `
-      <tr>
-        <td>${html(p.position || "—")}</td>
-        <td><strong>${html(p.name)}</strong></td>
-        <td class="${scoreClass(p.total)}">${scoreText(p.total)}</td>
-        <td>${html(p.thru || "—")}</td>
-        <td><span class="pill">${html(p.status || "Active")}</span></td>
-      </tr>
-    `).join("") || `<tr><td colspan="5" class="muted">No scores loaded.</td></tr>`;
+    body.innerHTML = (live.players || []).map(p => {
+      const status = inferredStatus(p);
+      return `
+        <tr>
+          <td>${html(p.position || "—")}</td>
+          <td><strong>${html(p.name)}</strong></td>
+          <td class="${scoreClass(p.total)}">${scoreText(p.total)}</td>
+          <td>${html(p.thru || "—")}</td>
+          <td><span class="pill">${html(status)}</span></td>
+        </tr>
+      `;
+    }).join("") || `<tr><td colspan="5" class="muted">No scores loaded.</td></tr>`;
   }
 
   function renderGroups() {
@@ -386,6 +416,8 @@
     pool.feePerGroup = Number($("feePerGroup")?.value || 20);
     pool.missedCutPenalty = Number($("missedCutPenalty")?.value || 10);
     pool.withdrawnPenalty = Number($("withdrawnPenalty")?.value || 15);
+    pool.cutOfficial = Boolean($("cutOfficial")?.checked);
+    pool.cutLine = currentCutLine();
     pool.golfersPerGroup = 4;
 
     try {
@@ -633,6 +665,16 @@
     if ($("csvUpload")) $("csvUpload").addEventListener("change", uploadEntrantGroupsCsv);
     if ($("downloadTemplate")) $("downloadTemplate").onclick = downloadTemplate;
     if ($("exportCsv")) $("exportCsv").onclick = exportCurrentGroupsCsv;
+    if ($("cutOfficial")) $("cutOfficial").addEventListener("change", () => {
+      pool.cutOfficial = Boolean($("cutOfficial").checked);
+      markUnsaved("Cut setting changed. Click Save Pool to publish it.");
+      render();
+    });
+    if ($("cutLine")) $("cutLine").addEventListener("input", () => {
+      pool.cutLine = currentCutLine();
+      markUnsaved("Cut line changed. Click Save Pool to publish it.");
+      render();
+    });
 
     await reloadAll(true);
     setInterval(() => reloadAll(false), 60000);
